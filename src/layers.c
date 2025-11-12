@@ -94,7 +94,7 @@ struct layer *layer_from_cllm_tensor_metadata(struct cllm_tensor_metadata *weigh
     case EMBEDDING:
         if (bias != NULL)
         {
-            perror("could valid bias for embedding layer");
+            perror("bias for embedding layer not supported");
             exit(1);
         }
         return create_embedding_layer(cuda_tensor_from_cllm_tensor_metadata(weight), name);

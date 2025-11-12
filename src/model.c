@@ -8,6 +8,7 @@
 //       Need to implement: transformer blocks, forwards for attention layers
 struct cuda_tensor * model_forward(struct model *model, struct cuda_tensor *inp)
 {
+    // This should be done on the transformer blocks, not just naively for all layers
     for (int i = 0; i < model->num_layers; i++)
     {
         struct layer *layer = model->layers[i];
