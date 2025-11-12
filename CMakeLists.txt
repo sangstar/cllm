@@ -20,6 +20,8 @@ add_executable(cllm src/main.c src/deserialize.c
         src/layers.c
         src/layers.h
         src/tensors.c
-        src/debug.h)
+        src/debug.h
+        src/model.c
+        src/model.h)
 target_link_libraries(cllm PRIVATE CUDA::cublas CUDA::cudart)
 

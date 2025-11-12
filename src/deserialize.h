@@ -45,6 +45,7 @@ struct cllm_tensor_metadata {
 struct cllm_data {
     struct cllm_header *header;
     struct cllm_tensor_metadata **tensors;
+    size_t num_tensors;
 };
 
 

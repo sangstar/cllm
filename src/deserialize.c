@@ -225,6 +225,6 @@ struct cllm_data *cllm_data_init(FILE *f) {
     }
     data->header = header;
     data->tensors = tensors;
-
+    data->num_tensors = header->tensor_count;
     return data;
 }

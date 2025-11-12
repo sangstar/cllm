@@ -5,8 +5,6 @@
 #ifndef CLLM_DEBUG_H
 #define CLLM_DEBUG_H
 
-#include "inttypes.h"
-#include "stdio.h"
 
 #define CUDA_CHECK(err) \
 do { \
@@ -19,6 +17,10 @@ exit(EXIT_FAILURE); \
 
 
 #ifdef DEBUG
+#include "inttypes.h"
+#include "stdio.h"
+#include "pthread.h"
+
 #define TRACE(fmt, ...) \
 do { \
 char _debug_log_buffer[1024]; \

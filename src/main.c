@@ -3,6 +3,7 @@
 #include "deserialize.h"
 #include "tensors.h"
 #include "layers.h"
+#include "model.h"
 
 
 
@@ -28,6 +29,8 @@ int main(void) {
     for (int i = 0; i < data->header->tensor_count; i++) {
         cllm_data_print_tensor(data, i);
     }
+
+    struct model *model = model_from_cllm_data(data);
 
     struct cuda_tensor *a = cuda_tensor_from_cllm_tensor_metadata(data->tensors[0]);
     struct cuda_tensor *b = cuda_tensor_from_cllm_tensor_metadata(data->tensors[1]);
