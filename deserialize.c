@@ -51,9 +51,21 @@ void cllm_datatype_to_string(char *buf, cllm_datatype dtype) {
     }
 }
 
+void *xmalloc(size_t size)
+{
+    void *ptr = malloc(size);
+    if (ptr == NULL)
+    {
+        perror("failed to initialize ptr");
+        exit(1);
+    }
+    memset(ptr, 0, size);
+    return ptr;
+}
+
 void cllm_header_set(struct cllm_header *header, FILE *f) {
     CLLM_FREAD(header->magic, 4, 1, f);
-    if (strcmp(header->magic, "CLLM") != 0) {
+    if (strncmp(header->magic, "CLLM", 4) != 0) {
         perror("invalid header");
         exit(1);
     }
@@ -65,13 +77,14 @@ void cllm_header_set(struct cllm_header *header, FILE *f) {
 void cllm_tensor_metadata_set_metadata(struct cllm_tensor_metadata *metadata, FILE *f) {
     uint16_t name_bytes;
     CLLM_FREAD(&name_bytes, sizeof(uint16_t), 1, f);
-    metadata->name = malloc(name_bytes);
+    metadata->name = xmalloc(name_bytes);
     CLLM_FREAD(metadata->name, 1, name_bytes, f);
+    metadata->name[name_bytes] = '\0';
     cllm_datatype dtype;
     CLLM_FREAD(&dtype, sizeof(cllm_datatype), 1, f);
     metadata->dtype = dtype;
     CLLM_FREAD(&metadata->n_dims, sizeof(uint16_t), 1, f);
-    metadata->dims = malloc(metadata->n_dims * sizeof(uint16_t));
+    metadata->dims = xmalloc(metadata->n_dims * sizeof(uint16_t));
     for (int i = 0; i < metadata->n_dims; i++) {
         CLLM_FREAD(&metadata->dims[i], sizeof(int), 1, f);
     }
@@ -88,12 +101,12 @@ void cllm_tensor_metadata_set_tensor_data(struct cllm_tensor_metadata *metadata,
     int pos = ftell(f);
     CLLM_FSEEK(f, metadata->offset, SEEK_SET);
     size_t size = cllm_datatype_to_size(metadata->dtype);
-    metadata->data = malloc(metadata->total_elems * size);
+    metadata->data = xmalloc(metadata->total_elems * size);
     CLLM_FREAD(metadata->data, cllm_datatype_to_size(metadata->dtype), metadata->total_elems, f);
     CLLM_FSEEK(f, pos, SEEK_SET);
 }
 
-void cllm_data_tensor_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf) {
+char *tensor_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf) {
     int *int_buf = NULL;
     float *float_buf = NULL;
     int cutoff_nums = len < 8 ? len: 8;
@@ -112,7 +125,20 @@ void cllm_data_tensor_to_buf(void *data, size_t len, cllm_datatype datatype, cha
     if (len > cutoff_nums) {
         buf += sprintf(buf, "... ");
     }
+    return buf;
 }
+
+
+void print_tensor(void *data, int n, int m, cllm_datatype datatype)
+{
+    char buf[256];
+    char *p = buf;
+    p += sprintf(p, "tensor (%i,%i) = [", n, m);
+    p = tensor_to_buf(data, n*m, datatype, p);
+    p += sprintf(p, "]");
+    printf("%s\n", buf);
+}
+
 
 void cllm_data_print_tensor(struct cllm_data *data, int pos) {
     struct cllm_tensor_metadata *tensor = data->tensors[pos];
@@ -126,7 +152,7 @@ void cllm_data_print_tensor(struct cllm_data *data, int pos) {
     char tensor_data[512];
     memset(tensor_data, 0, sizeof(tensor_data));
 
-    cllm_data_tensor_to_buf(tensor->data, tensor->total_elems, tensor->dtype, tensor_data);
+    tensor_to_buf(tensor->data, tensor->total_elems, tensor->dtype, tensor_data);
 
     char *p = buf;
     p += sprintf(p, "tensor_idx=%i ", pos);
@@ -154,12 +180,12 @@ struct cllm_data *cllm_data_free(struct cllm_data *data) {
 
 struct cllm_data *cllm_data_init(FILE *f) {
     CLLM_FSEEK(f, 0, SEEK_SET);
-    struct cllm_data *data = malloc(sizeof(struct cllm_data));
-    struct cllm_header *header = malloc(sizeof(struct cllm_header));
+    struct cllm_data *data = xmalloc(sizeof(struct cllm_data));
+    struct cllm_header *header = xmalloc(sizeof(struct cllm_header));
     cllm_header_set(header, f);
-    struct cllm_tensor_metadata **tensors = malloc(sizeof(struct cllm_tensor_metadata *) * header->tensor_count);
+    struct cllm_tensor_metadata **tensors = xmalloc(sizeof(struct cllm_tensor_metadata *) * header->tensor_count);
     for (int i = 0; i < header->tensor_count; i++) {
-        struct cllm_tensor_metadata *metadata = malloc(sizeof(struct cllm_tensor_metadata));
+        struct cllm_tensor_metadata *metadata = xmalloc(sizeof(struct cllm_tensor_metadata));
         cllm_tensor_metadata_set_metadata(metadata, f);
         tensors[i] = metadata;
     }

@@ -60,13 +60,17 @@ do { \
 } while(0)
 
 
+void *xmalloc(size_t size);
+
 void cllm_header_set(struct cllm_header *header, FILE *f);
 
 void cllm_tensor_metadata_set_metadata(struct cllm_tensor_metadata *metadata, FILE *f);
 
 void cllm_tensor_metadata_set_tensor_data(struct cllm_tensor_metadata *metadata, FILE* f);
 
-void cllm_data_tensor_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf);
+char *tensor_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf);
+
+void print_tensor(void *data, int n, int m, cllm_datatype datatype);
 
 void cllm_data_print_tensor(struct cllm_data *rose, int pos);
 
@@ -74,4 +78,4 @@ struct cllm_data *cllm_data_init(FILE *f);
 
 struct cllm_data *cllm_data_free(struct cllm_data *rose);
 
-#endif //ROSETTA_DESERIALIZE_H
+#endif //CLLM_DESERIALIZE_H
