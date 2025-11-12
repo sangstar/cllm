@@ -2,6 +2,7 @@
 
 #include "deserialize.h"
 #include "tensors.h"
+#include "layers.h"
 
 
 
@@ -39,4 +40,4 @@ int main(void) {
     cublasDestroy(handle);
     cudaFree(0);
     return 0;
-    }
+}

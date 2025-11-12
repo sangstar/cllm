@@ -72,9 +72,11 @@ def serialize_state_dict(state_dict: dict[str, torch.Tensor], f: BufferedWriter)
 
 def main():
     hf_model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m")
-    hf_model.state_dict()
+    sd = hf_model.state_dict()
+    for key, value in sd.items():
+        print(f"{key}: {list(value.shape)}")
     with open("pythia-160m.cllm", "wb") as f:
-        serialize_state_dict(hf_model.state_dict(), f)
+        serialize_state_dict(sd, f)
 
 
 

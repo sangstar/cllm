@@ -111,7 +111,7 @@ void cllm_tensor_metadata_set_tensor_data(struct cllm_tensor_metadata *metadata,
 char *tensor_data_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf) {
     int *int_buf = NULL;
     float *float_buf = NULL;
-    int cutoff_nums = len < 8 ? len: 8;
+    int cutoff_nums = len < 4 ? len: 4;
     if (datatype < 5) {
         int_buf = (int *)data;
         for (int i = 0; i < cutoff_nums; i++) {
@@ -159,7 +159,7 @@ char* write_tensor_repl_to_buf(char* buf, void* data, int* dims, int n_dims, cll
 
     cllm_datatype_to_string(datatype_buf, datatype);
     write_dims_to_buf(dims_buf, dims, n_dims);
-    p += sprintf(p, "tensor(shape=%s, dtype=%s, data=[", dims_buf, datatype_buf);
+    p += sprintf(p, "tensor(shape=%s, dtype=%s, buf=[", dims_buf, datatype_buf);
     p = tensor_data_to_buf(data, get_n_elems_from_dims(dims, n_dims), datatype, p);
     p += sprintf(p, "])");
     return buf;
@@ -186,16 +186,13 @@ void cllm_data_print_tensor(struct cllm_data *data, int pos) {
     char tensor_data[512];
     memset(tensor_data, 0, sizeof(tensor_data));
 
-    tensor_data_to_buf(tensor->data, tensor->total_elems, tensor->dtype, tensor_data);
+    write_tensor_repl_to_buf(tensor_data, tensor->data, tensor->dims, tensor->n_dims, tensor->dtype);
 
     char *p = buf;
     p += sprintf(p, "tensor_idx=%i ", pos);
-    p += sprintf(p, "name=%s, dtype=%s, n_dims=%llu", tensor->name, datatype, tensor->n_dims);
-    for (int i = 0; i < tensor->n_dims; i++) {
-        p += sprintf(p, ", dim_%i=%i", i, tensor->dims[i]);
-    }
+    p += sprintf(p, "name=%s", tensor->name);
     p += sprintf(p, " offset=%i", tensor->offset);
-    p += sprintf(p, " data=[%s]", tensor_data);
+    p += sprintf(p, " data=%s", tensor_data);
     printf("%s\n", buf);
 }
 
