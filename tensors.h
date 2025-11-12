@@ -4,9 +4,7 @@
 
 #ifndef CLLM_TENSORS_H
 #define CLLM_TENSORS_H
-#include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <stdlib.h>
 
 #include "deserialize.h"
 

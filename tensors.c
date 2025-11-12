@@ -3,6 +3,7 @@
 //
 
 #include "tensors.h"
+#include <stdlib.h>
 
 void cuda_tensor_memcpy_cpu_to_gpu(struct cuda_tensor* cu_tens)
 {
