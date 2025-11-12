@@ -2,7 +2,7 @@
 // Created by Sanger Steel on 11/11/25.
 //
 
-#include "deserialize.h"
+#include "../deserialize.h"
 
 #include <stdlib.h>
 #include <string.h>

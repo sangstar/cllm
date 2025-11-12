@@ -2,7 +2,7 @@
 // Created by Sanger Steel on 11/11/25.
 //
 
-#include "tensors.h"
+#include "../tensors.h"
 #include <stdlib.h>
 
 void cuda_tensor_memcpy_cpu_to_gpu(struct cuda_tensor* cu_tens)
