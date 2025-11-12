@@ -1,5 +1,7 @@
 import struct
 from io import BytesIO, BufferedWriter
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 import numpy as np
 import torch
 def torch_dtype_to_ros_dtype(dtype: torch.dtype):
@@ -69,8 +71,10 @@ def serialize_state_dict(state_dict: dict[str, torch.Tensor], f: BufferedWriter)
         write_tensor_data_and_patch_offsets(offsets, idx, tensor, f)
 
 def main():
-    with open("dummy.cllm", "wb") as f:
-        serialize_state_dict(dummy_state_dict, f)
+    hf_model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m")
+    hf_model.state_dict()
+    with open("pythia-160m.cllm", "wb") as f:
+        serialize_state_dict(hf_model.state_dict(), f)
 
 
 

@@ -1,10 +1,25 @@
+#include <stdlib.h>
+
 #include "deserialize.h"
 #include "tensors.h"
 
 
 
 int main(void) {
-    FILE *f = fopen("../dummy.cllm", "r");
+    int count = 0;
+    cudaGetDeviceCount(&count);
+    printf("Visible GPUs: %d\n", count);
+
+
+    cudaError_t err = cudaSetDevice(0);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Failed to set CUDA device 0: %s\n", cudaGetErrorString(err));
+        exit(1);
+    }
+
+    cudaFree(0);  // Forces context creation
+
+    FILE *f = fopen("../pythia-160m.cllm", "r");
     cublasHandle_t handle;
     cublasCreate(&handle);
 
@@ -16,11 +31,12 @@ int main(void) {
     struct cuda_tensor *a = cuda_tensor_from_cllm_tensor_metadata(data->tensors[0]);
     struct cuda_tensor *b = cuda_tensor_from_cllm_tensor_metadata(data->tensors[1]);
 
-    float *C = cuda_tensor_float_gemm(handle, a, b, 1.0f);
+    struct cuda_tensor *C = cuda_tensor_float_gemm(handle, a, b, 1.0f);
 
-    print_tensor(C, a->dims[0], b->dims[1], a->dtype);
+    cuda_tensor_print(C);
     // Cleanup
     cllm_data_free(data);
     cublasDestroy(handle);
+    cudaFree(0);
     return 0;
     }

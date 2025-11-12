@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 
+
 typedef uint8_t cllm_datatype;
 
 enum {
@@ -68,9 +69,13 @@ void cllm_tensor_metadata_set_metadata(struct cllm_tensor_metadata *metadata, FI
 
 void cllm_tensor_metadata_set_tensor_data(struct cllm_tensor_metadata *metadata, FILE* f);
 
-char *tensor_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf);
+char *tensor_data_to_buf(void *data, size_t len, cllm_datatype datatype, char *buf);
 
-void print_tensor(void *data, int n, int m, cllm_datatype datatype);
+
+
+char *write_tensor_repl_to_buf(char *buf, void *data, int *dims, int n_dims, cllm_datatype datatype);
+
+void print_tensor(void *data, int *dims, int n_dims, cllm_datatype datatype);
 
 void cllm_data_print_tensor(struct cllm_data *rose, int pos);
 

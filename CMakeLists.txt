@@ -6,10 +6,20 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CUDA_ARCHITECTURES all)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG -g ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
+
+
 find_package(CUDAToolkit REQUIRED)
 
-add_executable(cllm main.c deserialize.c
-        tensors.c
-        tensors.h)
+add_executable(cllm src/main.c src/deserialize.c
+        src/tensors.c
+        src/tensors.h
+        src/layers.c
+        src/layers.h
+        src/tensors.c
+        src/debug.h)
 target_link_libraries(cllm PRIVATE CUDA::cublas CUDA::cudart)
 
