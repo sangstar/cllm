@@ -60,7 +60,7 @@ do { \
 } while(0)
 
 
-void *xmalloc(size_t size);
+void *safe_malloc(size_t size);
 
 void cllm_header_set(struct cllm_header *header, FILE *f);
 

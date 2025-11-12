@@ -51,7 +51,7 @@ void cllm_datatype_to_string(char *buf, cllm_datatype dtype) {
     }
 }
 
-void *xmalloc(size_t size)
+void *safe_malloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL)
@@ -77,14 +77,14 @@ void cllm_header_set(struct cllm_header *header, FILE *f) {
 void cllm_tensor_metadata_set_metadata(struct cllm_tensor_metadata *metadata, FILE *f) {
     uint16_t name_bytes;
     CLLM_FREAD(&name_bytes, sizeof(uint16_t), 1, f);
-    metadata->name = xmalloc(name_bytes);
+    metadata->name = safe_malloc(name_bytes);
     CLLM_FREAD(metadata->name, 1, name_bytes, f);
     metadata->name[name_bytes] = '\0';
     cllm_datatype dtype;
     CLLM_FREAD(&dtype, sizeof(cllm_datatype), 1, f);
     metadata->dtype = dtype;
     CLLM_FREAD(&metadata->n_dims, sizeof(uint16_t), 1, f);
-    metadata->dims = xmalloc(metadata->n_dims * sizeof(uint16_t));
+    metadata->dims = safe_malloc(metadata->n_dims * sizeof(uint16_t));
     for (int i = 0; i < metadata->n_dims; i++) {
         CLLM_FREAD(&metadata->dims[i], sizeof(int), 1, f);
     }
@@ -101,7 +101,7 @@ void cllm_tensor_metadata_set_tensor_data(struct cllm_tensor_metadata *metadata,
     int pos = ftell(f);
     CLLM_FSEEK(f, metadata->offset, SEEK_SET);
     size_t size = cllm_datatype_to_size(metadata->dtype);
-    metadata->data = xmalloc(metadata->total_elems * size);
+    metadata->data = safe_malloc(metadata->total_elems * size);
     CLLM_FREAD(metadata->data, cllm_datatype_to_size(metadata->dtype), metadata->total_elems, f);
     CLLM_FSEEK(f, pos, SEEK_SET);
 }
@@ -180,12 +180,12 @@ struct cllm_data *cllm_data_free(struct cllm_data *data) {
 
 struct cllm_data *cllm_data_init(FILE *f) {
     CLLM_FSEEK(f, 0, SEEK_SET);
-    struct cllm_data *data = xmalloc(sizeof(struct cllm_data));
-    struct cllm_header *header = xmalloc(sizeof(struct cllm_header));
+    struct cllm_data *data = safe_malloc(sizeof(struct cllm_data));
+    struct cllm_header *header = safe_malloc(sizeof(struct cllm_header));
     cllm_header_set(header, f);
-    struct cllm_tensor_metadata **tensors = xmalloc(sizeof(struct cllm_tensor_metadata *) * header->tensor_count);
+    struct cllm_tensor_metadata **tensors = safe_malloc(sizeof(struct cllm_tensor_metadata *) * header->tensor_count);
     for (int i = 0; i < header->tensor_count; i++) {
-        struct cllm_tensor_metadata *metadata = xmalloc(sizeof(struct cllm_tensor_metadata));
+        struct cllm_tensor_metadata *metadata = safe_malloc(sizeof(struct cllm_tensor_metadata));
         cllm_tensor_metadata_set_metadata(metadata, f);
         tensors[i] = metadata;
     }

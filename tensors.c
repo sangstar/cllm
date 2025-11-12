@@ -11,7 +11,8 @@ void cuda_tensor_memcpy_cpu_to_gpu(struct cuda_tensor* cu_tens)
     cu_tens->copied = 1;
 }
 
-float* cuda_tensor_float_gemm(cublasHandle_t handle, struct cuda_tensor* a, struct cuda_tensor* b, const float alpha,
+// Performs α(A X B) + βC
+float* cuda_tensor_float_multiply_add(cublasHandle_t handle, struct cuda_tensor* a, struct cuda_tensor* b, struct cuda_tensor *c, const float alpha,
     const float beta)
 {
 
@@ -19,14 +20,25 @@ float* cuda_tensor_float_gemm(cublasHandle_t handle, struct cuda_tensor* a, stru
     cuda_tensor_memcpy_cpu_to_gpu(a);
     cuda_tensor_memcpy_cpu_to_gpu(b);
 
+
     size_t M = a->dims[0];
     size_t K = a->dims[1];
     size_t N = b->dims[1];
 
-    float *d_C;
-    cudaMalloc((void **)&d_C, M * N * sizeof(float));
 
-    float *C = (float *)xmalloc(sizeof(float) * M*N);
+    float *d_C;
+    if (c)
+    {
+        cuda_tensor_memcpy_cpu_to_gpu(c);
+        d_C = c->gpu_data;
+    } else
+    {
+        // In case c is NULL, where the caller wants to do multiply only
+        cudaMalloc((void **)&d_C, M * N * sizeof(float));
+        cudaMemset(d_C, 0, M * N * sizeof(float));
+    }
+
+    float *C = (float *)safe_malloc(sizeof(float) * M*N);
 
     if (K != b->dims[0])
     {
@@ -43,13 +55,21 @@ float* cuda_tensor_float_gemm(cublasHandle_t handle, struct cuda_tensor* a, stru
                 &beta,
                 d_C, N);
 
+    // Writes result to d_C while using it in the calculation. Copy to host buffer C
     cudaMemcpy(C, d_C, M*N*sizeof(float), cudaMemcpyDeviceToHost);
     return C;
 }
 
+
+// Performs α(A X B) by calling cuda_tensor_multiply_add, where β=0
+float* cuda_tensor_float_gemm(cublasHandle_t handle, struct cuda_tensor* a, struct cuda_tensor* b, const float alpha)
+{
+    return cuda_tensor_float_multiply_add(handle, a, b, NULL, alpha, 0.0f);
+}
+
 struct cuda_tensor* cuda_tensor_from_cllm_tensor_metadata(struct cllm_tensor_metadata* parent)
 {
-    struct cuda_tensor *cu_tens = (struct cuda_tensor *)xmalloc(sizeof(struct cuda_tensor));
+    struct cuda_tensor *cu_tens = (struct cuda_tensor *)safe_malloc(sizeof(struct cuda_tensor));
     cu_tens->parent = parent;
     cu_tens->dims = parent->dims;
     cu_tens->cpu_data = parent->data;
