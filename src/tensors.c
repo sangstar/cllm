@@ -4,7 +4,7 @@
 
 #include "tensors.h"
 #include <stdlib.h>
-
+#include "tensor_ops.cuh"
 #include "debug.h"
 
 size_t get_n_elems_from_dims(int *dims, int n_dims)
@@ -27,6 +27,7 @@ struct cuda_tensor* cuda_tensor_init(void* data, cllm_datatype dtype, int* dims,
     ret->n_dims = n_dims;
     ret->dims = dims;
     ret->copied = 0;
+    ret->owns_data = 1;
     return ret;
 }
 
@@ -42,6 +43,34 @@ void cuda_tensor_memcpy_cpu_to_gpu(struct cuda_tensor* cu_tens)
 void cuda_tensor_print(struct cuda_tensor* tensor)
 {
     print_tensor(tensor->cpu_data, tensor->dims, tensor->n_dims, tensor->dtype);
+}
+
+struct cuda_tensor * cuda_tensor_add(struct cuda_tensor *A, struct cuda_tensor *B)
+{
+    size_t n = get_n_elems_from_dims(A->dims, A->n_dims);
+    struct cuda_tensor *C = cuda_tensor_init(NULL, CLLM_FLOAT32, A->dims, A->n_dims);
+    C->cpu_data = NULL;
+    C->gpu_data = NULL;
+    CUDA_CHECK(cudaMalloc((void **)&C->gpu_data, (n * cllm_datatype_to_size(C->dtype))));
+    int threads = 256;
+    int blocks = (n + threads - 1) / threads;
+    add_kernel<<<blocks, threads>>>(A->gpu_data, B->gpu_data, C->gpu_data, n);
+    return C;
+}
+
+struct cuda_tensor * cuda_tensor_view(struct cuda_tensor *tensor, int start, int stop)
+{
+    struct cuda_tensor *slice = (struct cuda_tensor *)safe_malloc(sizeof(struct cuda_tensor));
+    size_t size = cllm_datatype_to_size(tensor->dtype);
+    slice->cpu_data = (char *)tensor->cpu_data + (start * size);
+    slice->gpu_data = (char *)tensor->gpu_data + (start * size);
+    int *dims = safe_malloc(sizeof(int) * tensor->n_dims);
+    memcpy(dims, tensor->dims, sizeof(int) * tensor->n_dims);
+    slice->n_dims = tensor->n_dims;
+    slice->dims[slice->n_dims - 1] = stop - start;
+    slice->copied = 0;
+    slice->owns_data = 0;
+    return slice;
 }
 
 // Performs α(A X B) + βC

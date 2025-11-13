@@ -5,6 +5,7 @@
 #ifndef CLLM_TENSORS_H
 #define CLLM_TENSORS_H
 #include <cublas_v2.h>
+#include <string.h>
 
 #include "deserialize.h"
 
@@ -19,6 +20,7 @@ struct cuda_tensor
     cllm_datatype dtype;
     struct cllm_tensor_metadata *parent;
     int copied;
+    int owns_data;
 };
 
 
@@ -35,4 +37,13 @@ struct cuda_tensor *cuda_tensor_float_multiply_add(cublasHandle_t handle, struct
 struct cuda_tensor *cuda_tensor_float_gemm(cublasHandle_t handle, struct cuda_tensor* a, struct cuda_tensor* b, const float alpha);
 
 void cuda_tensor_print(struct cuda_tensor *tensor);
+
+
+
+struct cuda_tensor *cuda_tensor_view(struct cuda_tensor *tensor, int start, int stop);
+
+
+
+
+struct cuda_tensor * cuda_tensor_add(struct cuda_tensor *A, struct cuda_tensor *B);
 #endif //CLLM_TENSORS_H

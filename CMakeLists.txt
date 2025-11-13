@@ -22,6 +22,14 @@ add_executable(cllm src/main.c src/deserialize.c
         src/tensors.c
         src/debug.h
         src/model.c
-        src/model.h)
+        src/model.h
+        src/transformer.c
+        src/transformer.h
+        src/tensor_ops.cu
+        src/tensor_ops.cuh
+        src/transformer.c
+        src/transformer.h
+        src/tensor_ops.cu
+        src/tensor_ops.cuh)
 target_link_libraries(cllm PRIVATE CUDA::cublas CUDA::cudart)
 

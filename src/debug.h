@@ -5,6 +5,7 @@
 #ifndef CLLM_DEBUG_H
 #define CLLM_DEBUG_H
 
+#include "stdlib.h"
 
 #define CUDA_CHECK(err) \
 do { \
